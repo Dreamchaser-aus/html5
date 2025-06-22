@@ -1,6 +1,6 @@
 import os
 import logging
-import psycopg2
+import psycopg
 import asyncio
 import nest_asyncio
 from datetime import datetime
@@ -21,7 +21,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_conn():
-    return psycopg2.connect(DATABASE_URL)
+    return psycopg.connect(DATABASE_URL)
 
 # 初始化数据库表
 def init_db():
