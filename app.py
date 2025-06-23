@@ -4,21 +4,22 @@ from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 from psycopg2 import connect
 from dotenv import load_dotenv
-import logging
 import nest_asyncio
+import logging
 
+# 初始化
 load_dotenv()
 nest_asyncio.apply()
 logging.basicConfig(level=logging.INFO)
 
-DATABASE_URL = os.getenv("DATABASE_URL")
 app = Flask(__name__)
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 # 数据库连接函数
 def get_conn():
     return connect(DATABASE_URL)
 
-# 自动建表
+# 初始化数据库表结构
 def init_db():
     with get_conn() as conn, conn.cursor() as c:
         c.execute("""
@@ -49,7 +50,7 @@ def init_db():
         """)
         conn.commit()
 
-# 首页：自动跳转首个可用用户
+# 首页自动跳转到首个合法用户
 @app.route("/")
 def index():
     try:
@@ -73,7 +74,7 @@ def index():
 def dice_game():
     return render_template("dice_game.html")
 
-# 游戏对战接口
+# 游戏逻辑接口
 @app.route("/api/play_game")
 def api_play_game():
     try:
@@ -119,6 +120,7 @@ def api_play_game():
         import traceback
         return jsonify({"error": "服务器错误", "trace": traceback.format_exc()}), 500
 
+# 启动服务
 if __name__ == "__main__":
     init_db()
     app.run(debug=True)
