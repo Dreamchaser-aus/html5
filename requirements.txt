@@ -1,1 +1,7 @@
 flask
+psycopg2-binary
+python-dotenv
+apscheduler
+nest-asyncio
+python-telegram-bot==20.7
+hypercorn
