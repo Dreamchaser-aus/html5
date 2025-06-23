@@ -178,5 +178,19 @@ def api_play_game():
 
 if __name__ == "__main__":
     init_db()
-    Thread(target=run_bot).start()
+
+    import threading
+    def run():
+        import asyncio
+        async def start_bot():
+            app_telegram = ApplicationBuilder().token(BOT_TOKEN).build()
+            app_telegram.add_handler(CommandHandler("start", start))
+            app_telegram.add_handler(MessageHandler(filters.CONTACT, handle_contact))
+            await app_telegram.initialize()
+            await app_telegram.start()
+            await app_telegram.updater.start_polling()
+            await app_telegram.updater.idle()
+        asyncio.run(start_bot())
+    threading.Thread(target=run).start()
+
     app.run(debug=True)
