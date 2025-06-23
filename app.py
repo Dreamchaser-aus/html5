@@ -1,12 +1,11 @@
 import os
 import random
-from datetime import datetime, date
+from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 from psycopg2 import connect
 from dotenv import load_dotenv
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-import nest_asyncio
 import logging
+import nest_asyncio
 
 load_dotenv()
 nest_asyncio.apply()
@@ -15,9 +14,42 @@ logging.basicConfig(level=logging.INFO)
 DATABASE_URL = os.getenv("DATABASE_URL")
 app = Flask(__name__)
 
+# 数据库连接函数
 def get_conn():
     return connect(DATABASE_URL)
 
+# 自动建表
+def init_db():
+    with get_conn() as conn, conn.cursor() as c:
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                user_id BIGINT PRIMARY KEY,
+                first_name TEXT,
+                last_name TEXT,
+                username TEXT,
+                phone TEXT,
+                points INTEGER DEFAULT 0,
+                plays INTEGER DEFAULT 0,
+                created_at TEXT,
+                last_play TEXT,
+                invited_by BIGINT,
+                is_blocked INTEGER DEFAULT 0
+            );
+        """)
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS game_history (
+                id SERIAL PRIMARY KEY,
+                user_id BIGINT NOT NULL,
+                created_at TIMESTAMP NOT NULL,
+                user_score INTEGER,
+                bot_score INTEGER,
+                result TEXT,
+                points_change INTEGER
+            );
+        """)
+        conn.commit()
+
+# 首页：自动跳转首个可用用户
 @app.route("/")
 def index():
     try:
@@ -29,16 +61,19 @@ def index():
             """)
             row = c.fetchone()
             if not row:
-                return "❌ 没有可用的用户，请先注册或授权手机号", 400
+                return "❌ 没有可用用户，请先注册并授权手机号", 400
             user_id = row[0]
             return f'<meta http-equiv="refresh" content="0; url=/dice_game?user_id={user_id}">'
     except Exception as e:
-        return f"<pre>数据库错误：{e}</pre>", 500
+        import traceback
+        return f"<pre>{traceback.format_exc()}</pre>", 500
 
+# HTML5 骰子游戏页面
 @app.route("/dice_game")
 def dice_game():
     return render_template("dice_game.html")
 
+# 游戏对战接口
 @app.route("/api/play_game")
 def api_play_game():
     try:
@@ -63,8 +98,8 @@ def api_play_game():
             bot_score = random.randint(1, 6)
             score = 10 if user_score > bot_score else -5 if user_score < bot_score else 0
             result = '赢' if score > 0 else '输' if score < 0 else '平局'
-
             now = datetime.now().isoformat()
+
             c.execute("UPDATE users SET points = points + %s, plays = plays + 1, last_play = %s WHERE user_id = %s",
                       (score, now, user_id))
             c.execute("INSERT INTO game_history (user_id, created_at, user_score, bot_score, result, points_change) "
@@ -85,4 +120,5 @@ def api_play_game():
         return jsonify({"error": "服务器错误", "trace": traceback.format_exc()}), 500
 
 if __name__ == "__main__":
+    init_db()
     app.run(debug=True)
