@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 DATABASE_URL = os.getenv("DATABASE_URL")
-GAME_BASE_URL = "https://你的域名/dice_game"  # ← 替换为你 Render 的实际域名
+GAME_BASE_URL = os.getenv("GAME_BASE_URL")
 
 # === Flask 应用 ===
 app = Flask(__name__)
