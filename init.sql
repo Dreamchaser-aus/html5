@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS game_history (
   points_change INTEGER
 );
 
--- 插入一个测试用户（你可以换掉 user_id 或手机号）
+-- 插入测试用户（你可以换成自己的用户 ID 和手机号）
 INSERT INTO users (
   user_id, first_name, last_name, username, phone,
   points, plays, created_at, last_play, invited_by, is_blocked
