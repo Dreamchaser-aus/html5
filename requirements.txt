@@ -1,7 +1,0 @@
-flask==2.2.5
-python-telegram-bot==20.7
-psycopg[binary]==3.2.9
-python-dotenv==1.0.0
-apscheduler==3.10.1
-nest-asyncio==1.5.6
-hypercorn==0.15.0
